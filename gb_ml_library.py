@@ -13,18 +13,29 @@ def normal_equations(x, y):
     return (np.linalg.inv(x.T.dot(x)).dot(x.T)).dot(y)
 
 
-def feature_normalization(x):
+def normalize(x, std, mean):
     m = x.shape[1]
     for i in range(m):
-        std = x[:, i].std()
-        mean = x[:, i].mean()
-        x[:, i] = (x[:, i] - mean)/std
+        x[:, i] = (x[:, i] - mean[i]) / std[i]
     return x
+
+def feature_normalization(x):
+    m = x.shape[1]
+    std = np.zeros((m, 1))
+    mean = np.zeros((m, 1))
+    for i in range(m):
+        std[i] = x[:, i].std()
+        mean[i] = x[:, i].mean()
+
+    x = normalize(x, std, mean)
+    return x, std, mean
+
 
 
 class LinearRegression:
     def __init__(self):
         self.theta = []
+        self.normalized = False
 
     @staticmethod
     def cost_function(x, y, theta):
@@ -38,7 +49,10 @@ class LinearRegression:
 
     def fit(self, x, y, num_iterations=100, alpha=0.01, feature_norm=False, normal_eq=False):
         if feature_norm:
-            x = feature_normalization(x)
+            x, std, mean = feature_normalization(x)
+            self.std = std
+            self.mean = mean
+            self.normalized = True
         ones = np.ones(shape=(x.shape[0],))
         revisited_x = np.column_stack((ones, x))
         if normal_eq:
@@ -49,5 +63,7 @@ class LinearRegression:
 
     def predict(self, x):
         ones = np.ones(shape=(x.shape[0],))
+        if self.normalized:
+            x = normalize(x, self.std, self.mean)
         revisited_x = np.column_stack((ones, x))
         return revisited_x.dot(self.theta)
