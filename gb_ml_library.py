@@ -31,6 +31,38 @@ def feature_normalization(x):
     return x, std, mean
 
 
+def sigmoid(hypothesis):
+    return 1/(1 + np.exp(-hypothesis))
+
+
+class LogisticRegression:
+    def __init__(self):
+        self.theta = []
+
+    @staticmethod
+    def cost_function(x,y, theta):
+        hypothesis = sigmoid(x.dot(theta))
+        m = len(y)
+        cost = (-y*np.log(hypothesis)-(1-y)*np.log(1-hypothesis)).sum()/m
+        grad = np.zeros(shape=theta.shape)
+        for i in range(len(theta)):
+            grad[i] = ((hypothesis - y)*x[:, i]).sum()/m
+        return cost, grad
+
+    def fit(self, x, y, num_iterations=100, alpha=0.01, normal_eq=False):
+        ones = np.ones(shape=(x.shape[0],))
+        revisited_x = np.column_stack((ones, x))
+        if normal_eq:
+            self.theta = normal_equations(revisited_x, y)
+        else:
+            self.theta = np.zeros(shape=(revisited_x.shape[1],))
+            self.theta = np.array([-24, 0.2, 0.2])
+            self.theta = gradient_descent(self.cost_function, revisited_x, y, self.theta, num_iterations, alpha)
+
+    def predict(self, x):
+        ones = np.ones(shape=(x.shape[0],))
+        revisited_x = np.column_stack((ones, x))
+        return sigmoid(revisited_x.dot(self.theta))
 
 class LinearRegression:
     def __init__(self):
